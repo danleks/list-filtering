@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Filtrowanie listy</title>
+</head>
+<style>
+    :root {
+        --colorDarkMid: #444444;
+        --colorDarkDeep: #191919;
+        --colorGreen: #52db6b;
+        --colorGreenDark: #36d553;
+        --colorGreyLight: #F4F4F4;
+        --colorGreyMid: #6e6e6e;
+        --colorGreyDark: #959595;
+    }
+    html {
+        box-sizing: border-box;
+        font-size: 62.5%;
+    }
+
+    body {
+        display: grid;
+        grid-template-rows: 18rem 1fr;
+        grid-gap: 1.5rem;
+        height: 100vh;
+        font-family: monospace;
+        -webkit-font-smoothing: antialiased;
+        background-color: var(--colorGreyLight);
+    }
+
+    *, *:before, *:after {
+        box-sizing: inherit;
+        padding: 0;
+        margin: 0;
+    }
+
+    .header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-evenly;
+        background-color: var(--colorDarkMid);
+
+    }
+
+    .header__heading {
+        font-size: 2.3rem;
+        font-weight: 100;
+        color: var(--colorGreen);
+    }
+
+    .main {
+        overflow: auto;
+    }
+
+    .filter {
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        width: 27rem;
+    }
+
+    .filter__input {
+        width: 70%;
+        padding-left: 3rem;
+        border: none;
+        border-bottom: 1px solid var(--colorDarkDeep);
+        color: var(--colorGreyDark);
+        background: none;
+        transition: .3s all;
+    }
+
+    .filter__input:focus {
+        outline: none;
+        border-bottom: 1px solid var(--colorGreyDark);
+    }
+
+    .filter__input::placeholder {
+        font-family: monospace;
+        transition: .2s all;
+    }
+
+    .filter__input:focus::placeholder {
+        transform: translateY(-2rem);
+        opacity: 0;
+    }
+
+    .filter__icon {
+        position: absolute;
+        top: 4px;
+        left: 0;
+        font-size: 1.3rem;
+        color: var(--colorGreyMid);
+    }
+
+    .filter__button {
+        padding: 6px 1rem;
+        border: none;
+        border-radius: 2px;
+        font-family: inherit;
+        color: var(--colorDarkDeep);
+        background: linear-gradient(to right, var(--colorGreen) 50%, var(--colorGreyLight) 50%);
+        background-size: 200% 100%;
+        background-position: right bottom;
+        transition: .3s all;
+    }
+
+    .filter__button:hover {
+        background-position: left bottom;
+        cursor: pointer;
+    }
+
+    .list {
+        display: grid;
+        justify-content: center;
+        grid-template-columns: 1fr;
+        grid-auto-rows: 6rem;
+        grid-gap: 1.5rem;
+        width: 100%;
+        height: 100vh;
+        padding: 0 1.5rem;
+        list-style: none;
+    }
+
+    .list__item {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #fff;
+        box-shadow: 1px 2px 6px rgba(0,0,0,.3);
+        font-size: 1.5rem;
+    }
+
+    .noResults {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100%;
+        transform: translate(-50%, -50%);
+        color: #bbb;
+        font-size: 2rem;
+        text-align: center;
+        line-height: 1.5;
+    }
+
+    @media(min-width: 768px) {
+        body {
+            grid-gap: 2.5rem;
+        }
+
+        .header__heading {
+            font-size: 3rem;
+        }
+
+        .filter {
+            width: 40rem;
+        }
+
+        .filter__input {
+            width: 75%;
+            font-size: 1.8rem;
+        }
+
+        .filter__icon {
+            top: 3px;
+            font-size: 1.8rem;
+        }
+
+        .filter__button {
+            padding: 8px 1.5rem;
+        }
+
+        .list {
+            grid-gap: 2.5rem;
+            padding: 0 10rem;
+        }
+
+        .noResults {
+            font-size: 3rem;
+        }
+    }
+
+    @media (min-width: 900px) {
+        .list {
+            padding: 0;
+            justify-items: center;
+        }
+
+        .list__item {
+            width: 70rem;
+        }
+    }
+</style>
+<body>
+    <header class="header">
+        <h1 class="header__heading">List filtering</h1>
+        <div class="filter">
+            <input class="filter__input" type="search" id="search" placeholder="Type in smth...">
+            <span class="filter__icon" for="search">&#128269</span>
+            <button class="filter__button">Filter</button>
+        </div>
+    </header>
+    <main class="main">
+        <ul class="list"></ul>
+        <span class="noResults"></span>
+    </main>
+<script>
+    const data = [
+        {
+            id: 0,
+            text: 'Walmart',
+        },
+        {
+            id: 1,
+            text: 'State Grid',
+        },
+        {
+            id: 2,
+            text: 'Sinopec Group',
+        },
+        {
+            id: 3,
+            text: 'China National Petroleum',
+        },
+        {
+            id: 4,
+            text: 'Royal Dutch Shell',
+        },
+        {
+            id: 5,
+            text: 'Toyota Motor',
+        },
+        {
+            id: 6,
+            text: 'Volkswagen',
+        },
+        {
+            id: 7,
+            text: 'BP',
+        },
+        {
+            id: 8,
+            text: 'Exxon Mobil',
+        },
+        {
+            id: 9,
+            text: 'Berkshire Hathaway',
+        },
+    ]
+
+    const list = {
+        init: function init(data){
+
+            this.inputValue = '';
+
+            this.button = document.querySelector('.filter__button');
+            this.input = document.querySelector('.filter__input');
+            this.noResults = document.querySelector('.noResults');
+            this.list = document.querySelector('.list');
+            this.item = this.addListItem();
+
+             // set HTML
+            this.cloneNode(this.item, data.length, true);
+            this.insertContent(this.getListItems(), data);
+
+            // bind events
+            window.addEventListener('keyup', this.enterKeyPress.bind(list));
+            this.button.addEventListener('click', this.filter.bind(list));
+            this.input.addEventListener('input', this.getValue.bind(list));
+
+            return this;
+        },
+
+        addListItem: function addListItem() {
+            const li = document.createElement('li');
+            li.setAttribute('class', 'list__item');
+            return this.list.appendChild(li);
+        },
+
+        cloneNode: function cloneNode(node, numberOfCopies, deep){
+             // copying repetative html and inserting it
+            for (let i = 0; i < numberOfCopies - 1; i++) {
+                let copy = node.cloneNode(deep);
+                node.parentNode.insertBefore(copy, node);
+            };
+        },
+
+        getValue: function getValue(e){
+            this.inputValue = e.target.value;
+        },
+
+        getListItems: function getListItems() {
+            return document.querySelectorAll('.list__item');
+        },
+
+        insertContent: function insertContent(items, data){
+            for (const [i, item] of items.entries()) {
+                for (const [y, entry] of data.entries()) {
+                    i === y ? item.innerHTML = entry.text : '';
+                }
+            }
+        },
+
+        filter: function filter(){
+            let filter = new RegExp(this.inputValue, 'i');
+            let filteredData = data.filter(key => key.text.match(filter));
+
+            if (filteredData.length > 0) {
+                this.noResults.innerHTML = '';
+                this.noResults.style.display = 'none';
+                this.list.innerHTML = '';
+                this.cloneNode(this.addListItem(), filteredData.length, true);
+                this.insertContent(this.getListItems(), filteredData);
+            } else {
+                this.list.innerHTML = '';
+                this.noResults.style.display = 'block';
+                this.noResults.innerHTML = 'Oops, nothing found :( </br> Try again.'
+            }
+
+        },
+
+        enterKeyPress: function enterKeyPress(e){
+            e.key === 'Enter' ? this.filter() : false;
+        },
+    };
+
+    list.init(data);
+
+</script>
+</body>
+</html>
